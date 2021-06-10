@@ -1,0 +1,39 @@
+- hosts: webserver
+  become: yes
+  become_user: root
+  vars:
+    - docroot: /var/www/magento2
+  tasks:
+    - name: Add Nginx Repository
+      apt_repository:
+        repo: ppa:nginx/stable
+        state: present
+
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest
+        update_cache: true
+      notify:
+        - Start Nginx
+
+    - name: Create Web Root
+      file:
+        path: "{{ docroot }}"
+        mode: 775
+        state: directory
+        owner: www-data
+        group: www-data
+      notify:
+        - Reload Nginx
+
+  handlers:
+    - name: Start Nginx
+      service:
+        name: nginx
+        state: started
+
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
